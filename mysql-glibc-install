@@ -1,0 +1,61 @@
+1、centos7系统自带mariadb数据库，先卸载再安装mysql,防止有冲突。（注意：如果/etc下有my.cnf也卸载掉）
+  1）查询是否有安装的mariadb文件
+     rpm -qa | grep mariadb 
+  2）使用-nodeps 不考虑依赖，强制卸载
+     rpm -e --nodeps。。。。。
+
+2、从官网下载mysql数据库安装包，并解压缩，（我已经下载mysql-5.7.21-linux-glibc2.12-x86_64.tar.gz到/usr/local目录）
+ 1）解压缩
+    tar -zxvf mysql-5.7.21-linux-glibc2.12-x86_64.tar.gz
+ 2）修改解压后的文件名为mysql    
+    mv mysql-5.7.21-linux-glibc2.12-x86_64 mysql
+        
+3、添加mysql用户组和mysql用户，更改mysql目录拥有者(可选)
+ 1）先检查是否有mysql用户组和mysql用户,我已添加了，请忽略
+    groups mysql
+   若没有，就添加
+   groupadd mysql
+   useradd -r -g mysql mysql
+   改变目录的用拥有者
+   cd /usr/local/mysql
+   chown -R mysql .
+   chgrp -R mysql .
+   
+4、 初始化配置
+    bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
+    （注意：生成的初始密码，记录下来）
+    bin/mysql_ssl_rsa_setup  --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
+    bin/mysqld_safe  --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
+   
+5、新建并修改系统配置文件  
+   注：mysql5.7.21不需要my.cnf文件
+   cd /usr/local/mysql/support-files
+   cp mysql.server /etc/init.d/mysql
+   vi /etc/init.d/mysql
+   修改以下内容：
+   basedir=
+   datadir=
+   
+ 7、启动mysql
+  1）启动mysql
+    /etc/init.d/mysql start
+  2）登录数据库
+    mysql -hlocalhost -uroot -p
+    如果出现：-bash: mysql: command not found
+    就执行： # ln -s /usr/local/mysql/bin/mysql /usr/bin --没有出现就不用执行
+    输入第6步生成的临时密码
+  3）修改密码
+    set password=password('123456');
+  4）设置root账户的host地址（修改了才可以远程连接）
+    grant all privileges on *.* to 'root'@'%' identified by '123456';
+    flush privileges;
+    use mysql;
+    查看root账户访问控制已经被修改
+    select host,user from user;
+  5）启动防火墙，防火墙放行3306端口
+     systemctl start firewalld
+     firewall-cmd --zone=public --add-port=3306/tcp --permanent
+     service firewalld restart
+     这里就可以使用远程连接测试了；
+     如果连不上关闭防火墙即可
+     systemctl stop firewalld
