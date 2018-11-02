@@ -1,0 +1,25 @@
+1、执行安装：
+  yum install -y vsftpd
+ 
+2、检查是否已经安装：
+  rpm -qa |grep vsftpd
+  
+3、创建ftp用户所需要使用的文件夹：
+  mkdir ......
+  
+4、添加匿名用户：
+  useradd ftpuser -d /ftp用户所需要使用的文件夹名 -s /sbin/nologin
+  
+5、修改ftp文件夹权限：
+  chown -R ftpuser.ftpuser /ftp用户所需要使用的文件夹名
+  
+6、设置ftpuser密码：
+ passwd ftpuser
+ 
+ 
+配置：
+  cd /etc/vsftpd/
+  vi chroot_list
+  
+vi /etc/selinux/config    修改selinux为disable
+
